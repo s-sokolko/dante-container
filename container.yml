@@ -1,0 +1,26 @@
+version: "2"
+settings:
+
+  conductor:
+    base: alpine:3.5
+    roles_path: 
+      - roles
+
+  project_name: dante
+#  vars_files: 
+  vault_password_file: .vault_pass
+  vault_files:
+    - vars.yml
+ 
+services:
+  dante:
+    from: alpine:3.5
+    roles:
+      - dante-container
+    ports:
+      - 1080:1080
+    volumes:
+      - /etc/sockd.conf
+    entrypoint: ["dumb-init"]
+    command: ["sockd"]
+

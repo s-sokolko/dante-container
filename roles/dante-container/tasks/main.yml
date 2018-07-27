@@ -1,0 +1,37 @@
+- apk:
+    update_cache: yes
+    name: "{{ item }}"
+  with_items:
+    - linux-pam
+    - curl
+    - git 
+    - openssl
+
+- name: create users
+  shell: adduser -s /bin/false -D -S -H {{ item.username }}
+  with_items: "{{ proxy_users }}"
+
+- name: create user passwords
+  shell: echo "{{ item.username }}:{{ item.password }}" | chpasswd
+  with_items: "{{ proxy_users }}"
+
+- name: install some extra stuff
+  shell: apk add --no-cache -t .build-deps build-base linux-pam-dev 
+
+- name: download dante
+  get_url: url=https://www.inet.no/dante/files/dante-1.4.2.tar.gz dest=/tmp/dante.tar.gz
+
+- name: unpack dante
+  shell: tar -xzf dante.tar.gz chdir=/tmp
+
+- name: configure and install dante
+  shell: ac_cv_func_sched_setscheduler=no ./configure && make install chdir=/tmp/dante-1.4.2
+
+- name: clear apk
+  shell: apk del --purge .build-deps
+
+- name: download dumb-init
+  get_url: 
+    url: https://github.com/Yelp/dumb-init/releases/download/v1.2.1/dumb-init_1.2.1_amd64
+    dest: /usr/local/bin/dumb-init
+    mode: 0755
